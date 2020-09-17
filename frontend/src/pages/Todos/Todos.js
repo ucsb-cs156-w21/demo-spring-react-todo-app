@@ -22,17 +22,18 @@ const TodoList = () => {
   if (!todoList) {
     return <Loading />;
   }
-  const toggleTodo = async (index, id) => {
+  const toggleTodo = async (todo, id) => {
     await fetchWithToken(`/api/todos/${id}`, getToken, {
-      method: "POST",
+      method: "PUT",
       headers: {
         "content-type": "application/json",
       },
+      body: JSON.stringify(todo),
       noJSON: true,
     });
     await mutateTodos();
   };
-  const deleteTodo = async (index, id) => {
+  const deleteTodo = async (id) => {
     await fetchWithToken(`/api/todos/${id}`, getToken, {
       method: "DELETE",
       headers: {

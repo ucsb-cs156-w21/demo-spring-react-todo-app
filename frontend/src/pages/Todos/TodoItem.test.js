@@ -45,9 +45,15 @@ describe("TodoItem tests", () => {
       toggleTodo: jest.fn(),
       deleteTodo: jest.fn(),
     };
+    const updatedTodo = {
+      ...props.item,
+      done: !props.item.done,
+    };
+
     render(<TodoItem {...props} />);
     userEvent.click(screen.getByText(props.item.value));
     expect(props.toggleTodo).toHaveBeenCalledTimes(1);
+    expect(props.toggleTodo).toHaveBeenCalledWith(updatedTodo, 1);
   });
 
   test("clicking on delete button triggers toggleTodo", () => {
@@ -64,5 +70,6 @@ describe("TodoItem tests", () => {
     render(<TodoItem {...props} />);
     userEvent.click(screen.getByText(/Delete/));
     expect(props.deleteTodo).toHaveBeenCalledTimes(1);
+    expect(props.deleteTodo).toHaveBeenCalledWith(props.item.id);
   });
 });

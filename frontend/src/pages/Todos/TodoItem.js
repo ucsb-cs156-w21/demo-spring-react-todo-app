@@ -5,7 +5,14 @@ export function TodoItem({ item, index, toggleTodo, deleteTodo }) {
   return (
     <ListGroup.Item>
       <Button
-        onClick={(e) => toggleTodo(index, item.id)}
+        onClick={(e) => {
+          e.preventDefault();
+          const updatedItem = {
+            ...item,
+            done: !item.done,
+          };
+          toggleTodo(updatedItem, item.id);
+        }}
         variant="link"
         style={{
           textDecorationLine: item.done ? "line-through" : "none",
@@ -16,7 +23,7 @@ export function TodoItem({ item, index, toggleTodo, deleteTodo }) {
       </Button>
       <Button
         className="btn-danger float-right"
-        onClick={(e) => deleteTodo(index, item.id)}
+        onClick={(e) => deleteTodo(item.id)}
       >
         Delete
       </Button>
