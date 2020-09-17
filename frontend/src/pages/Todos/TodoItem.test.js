@@ -34,7 +34,7 @@ describe("TodoItem tests", () => {
     expect(item).toBeInTheDocument();
   });
 
-  test("clicking on item button triggers toggleTodo", () => {
+  test("clicking on checkbox button triggers toggleTodo", () => {
     const props = {
       item: {
         value: "value",
@@ -51,7 +51,7 @@ describe("TodoItem tests", () => {
     };
 
     render(<TodoItem {...props} />);
-    userEvent.click(screen.getByText(props.item.value));
+    userEvent.click(screen.getByAltText("checkbox"));
     expect(props.toggleTodo).toHaveBeenCalledTimes(1);
     expect(props.toggleTodo).toHaveBeenCalledWith(updatedTodo, 1);
   });
