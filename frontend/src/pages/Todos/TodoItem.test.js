@@ -29,31 +29,9 @@ describe("TodoItem tests", () => {
       toggleTodo: jest.fn(),
       deleteTodo: jest.fn(),
     };
-    const { getByText } = render(<TodoItem {...props} />);
-    const item = getByText(props.item.value);
+    const { getByDisplayValue } = render(<TodoItem {...props} />);
+    const item = getByDisplayValue(props.item.value);
     expect(item).toBeInTheDocument();
-  });
-
-  test("clicking on checkbox button triggers toggleTodo", () => {
-    const props = {
-      item: {
-        value: "value",
-        id: 1,
-        done: false,
-      },
-      index: 0,
-      toggleTodo: jest.fn(),
-      deleteTodo: jest.fn(),
-    };
-    const updatedTodo = {
-      ...props.item,
-      done: !props.item.done,
-    };
-
-    render(<TodoItem {...props} />);
-    userEvent.click(screen.getByAltText("checkbox"));
-    expect(props.toggleTodo).toHaveBeenCalledTimes(1);
-    expect(props.toggleTodo).toHaveBeenCalledWith(updatedTodo, 1);
   });
 
   test("clicking on delete button triggers toggleTodo", () => {

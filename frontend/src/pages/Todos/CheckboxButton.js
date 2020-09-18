@@ -15,7 +15,7 @@ const CheckboxButton = ({ item, toggle }) => {
 
   return (
     <button
-      style={{ background: "none", border: "none" }}
+      style={{ background: "none", border: "none", marginTop: "5px" }}
       onClick={handleCheckBoxClick}
     >
       <img src={item.done ? checkboxChecked : checkbox} alt="checkbox"></img>

@@ -63,7 +63,7 @@ const TodoList = () => {
         key={index}
         item={item}
         index={index}
-        toggleTodo={toggleTodo}
+        updateTodo={toggleTodo}
         deleteTodo={deleteTodo}
       />
     );
