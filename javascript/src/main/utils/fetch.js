@@ -10,6 +10,7 @@ export async function fetchWithToken(url, getToken, options) {
     },
   });
   if (response.status >= 400 && response.status < 600) {
+    debugger;
     throw new Error(response.error_description);
   }
   if (options?.noJSON) {

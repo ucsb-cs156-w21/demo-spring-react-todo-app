@@ -8,6 +8,7 @@ import { fetchWithToken } from "main/utils/fetch";
 import { useAuth0 } from "@auth0/auth0-react";
 import Loading from "main/components/Loading/Loading";
 import { sortTodos } from "../../utils/todoHelpers";
+import {TodoUploadButton} from "./TodoUploadButton";
 
 const TodoList = () => {
   const { user, getAccessTokenSilently: getToken } = useAuth0();
@@ -57,6 +58,17 @@ const TodoList = () => {
     });
     await mutateTodos();
   };
+
+  const uploadTodos = async (file) => {
+    const data = new FormData();
+    data.append("csv", file);
+    await fetchWithToken(`/api/todos/upload`, getToken, {
+      method: "POST",
+      body: data
+    });
+    await mutateTodos();
+  };
+
   var items = sortTodos(todoList).map((item, index) => {
     return (
       <TodoItem
@@ -73,6 +85,7 @@ const TodoList = () => {
     <>
       <TodoHeader name={user.name} />
       <TodoForm addTask={saveTodo} />
+      <TodoUploadButton addTask={uploadTodos}/>
       <ListGroup> {items} </ListGroup>
     </>
   );

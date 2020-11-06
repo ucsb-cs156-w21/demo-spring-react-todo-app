@@ -1,18 +1,18 @@
 package com.ucsb.demonextjsspringtodoapp.controllers;
 
+import com.ucsb.demonextjsspringtodoapp.services.CSVToObjectService;
+import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
@@ -22,6 +22,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ucsb.demonextjsspringtodoapp.models.Todo;
 import com.ucsb.demonextjsspringtodoapp.repositories.TodoRepository;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 public class TodoController {
@@ -29,6 +30,9 @@ public class TodoController {
 
   @Autowired
   private TodoRepository todoRepository;
+
+  @Autowired
+  CSVToObjectService<Todo> csvToObjectService;
 
   private ObjectMapper mapper = new ObjectMapper();
 
@@ -83,4 +87,28 @@ public class TodoController {
     String body = mapper.writeValueAsString(todoList);
     return ResponseEntity.ok().body(body);
   }
+
+  @PostMapping(value = "/api/todos/upload", produces = "application/json")
+  public ResponseEntity<String> uploadCSV(@RequestParam("csv") MultipartFile csv, @RequestHeader("Authorization") String authorization)
+          throws JsonProcessingException {
+    String error = "";
+    DecodedJWT jwt = JWT.decode(authorization.substring(7));
+    try(Reader reader = new InputStreamReader(csv.getInputStream())){
+      logger.info(new String(csv.getInputStream().readAllBytes()));
+      List<Todo> todos = csvToObjectService.parse(reader, Todo.class);
+      for (Todo todo : todos) {
+        todo.setUserId(jwt.getSubject());
+      }
+      List<Todo> savedTodos = (List<Todo>) todoRepository.saveAll(todos);
+      String body = mapper.writeValueAsString(savedTodos);
+      return ResponseEntity.ok().body(body);
+    } catch(IOException e){
+      logger.error(e.toString());
+    } catch(RuntimeException e){
+      error = "CSV could not be parsed " + e.getLocalizedMessage();
+    }
+    return ResponseEntity.badRequest().body("{}");
+  }
+
+
 }

@@ -5,6 +5,9 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+
+import com.opencsv.bean.CsvBindByName;
+import com.opencsv.bean.CsvBindByPosition;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 
 @Entity
@@ -12,17 +15,24 @@ public class Todo {
   @Id
   @GeneratedValue(strategy = GenerationType.AUTO)
   private Long id;
+
   @Column(nullable = false)
+  @CsvBindByPosition(position = 0)
+  @CsvBindByName
   private String value;
+
+  @CsvBindByPosition(position = 1)
+  @CsvBindByName
   @Column(nullable = false)
-  private boolean done;
+  private Boolean done;
+
   @Column(nullable = false)
   private String userId;
 
   public Todo() {
   }
 
-  public Todo(Long id, String value, boolean done, String userId) {
+  public Todo(Long id, String value, Boolean done, String userId) {
     this.id = id;
     this.value = value;
     this.done = done;
