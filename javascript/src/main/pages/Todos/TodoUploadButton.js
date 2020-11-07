@@ -15,10 +15,23 @@ export const TodoUploadButton = ({ addTask }) => {
                 setValue("");
             }}
         >
-            <Form.Group>
-                <Form.File id="todo csv" label="Todos CSV" />
-                <Button type="submit">Submit</Button>
-            </Form.Group>
+            <Container fluid>
+                <Row style={{paddingTop: 14}}>
+                    <Col xs={11} style={{ padding: 0 }}>
+                        <Form.Group>
+                            <Form.File
+                                type="file"
+                                accept=".csv"
+                                id="custom-file-input"
+                                label="Upload a CSV"
+                                custom />
+                        </Form.Group>
+                    </Col>
+                    <Col xs={1} style={{ padding: 0 }}>
+                        <Button type="submit">Submit</Button>
+                    </Col>
+                </Row>
+            </Container>
         </form>
     );
 };

@@ -107,7 +107,7 @@ public class TodoController {
     } catch(RuntimeException e){
       error = "CSV could not be parsed " + e.getLocalizedMessage();
     }
-    return ResponseEntity.badRequest().body("{}");
+    return ResponseEntity.badRequest().body(error);
   }
 
 

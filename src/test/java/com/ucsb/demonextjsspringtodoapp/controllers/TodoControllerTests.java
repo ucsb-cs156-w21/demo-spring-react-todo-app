@@ -1,11 +1,13 @@
 package com.ucsb.demonextjsspringtodoapp.controllers;
 
+import com.ucsb.demonextjsspringtodoapp.services.CSVToObjectService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -28,6 +30,10 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ucsb.demonextjsspringtodoapp.models.Todo;
 import com.ucsb.demonextjsspringtodoapp.repositories.TodoRepository;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
 @WebMvcTest(value = TodoController.class)
 @WithMockUser
@@ -38,6 +44,12 @@ public class TodoControllerTests {
 
   @Autowired
   private ObjectMapper objectMapper;
+
+  @MockBean
+  private CSVToObjectService<Todo> csvToObjectService;
+
+  @Autowired
+  private WebApplicationContext webApplicationContext;
 
   @MockBean
   TodoRepository mockTodoRepository;
@@ -201,4 +213,23 @@ public class TodoControllerTests {
     verify(mockTodoRepository, times(1)).findById(expectedTodo.getId());
     verify(mockTodoRepository, times(0)).deleteById(expectedTodo.getId());
   }
+
+  @Test
+  public void testUploadFile() throws Exception{
+    List<Todo> expectedTodos = new ArrayList<Todo>();
+    expectedTodos.add(new Todo(1L, "todo", false, "123456"));
+    MockMultipartFile mockFile = new MockMultipartFile(
+            "csv",
+            "test.csv",
+            MediaType.TEXT_PLAIN_VALUE,
+            "value,done\ntodo,false".getBytes()
+    );
+    MockMvc mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+    MvcResult response = mockMvc.perform(multipart("/api/todos/upload").file(mockFile)
+              .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken()))
+            .andExpect(status().isOk()).andReturn();
+
+//    verify(mockTodoRepository, times(1)).saveAll(expectedTodos);
+  }
+
 }
