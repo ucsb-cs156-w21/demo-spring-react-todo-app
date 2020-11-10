@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import {Button, Col, Row, Container, Form} from "react-bootstrap";
+import {toast} from "react-toastify";
 export const TodoUploadButton = ({ addTask }) => {
     const [value, setValue] = useState("");
     return (
@@ -9,8 +10,15 @@ export const TodoUploadButton = ({ addTask }) => {
                 const file = event.currentTarget[0].files[0];
                 try{
                     await addTask(file);
+                    event.currentTarget[0].files[0] = null;
                 } catch(error){
-                    console.dir(error);
+                    toast.error(error.message, {
+                        position: "top-right",
+                        autoClose: 3000,
+                        closeOnClick: true,
+                        pauseOnHover: true
+                    });
+
                 }
                 setValue("");
             }}

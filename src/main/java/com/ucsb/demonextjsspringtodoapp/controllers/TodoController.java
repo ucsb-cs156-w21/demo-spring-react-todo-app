@@ -1,18 +1,16 @@
 package com.ucsb.demonextjsspringtodoapp.controllers;
 
 import com.ucsb.demonextjsspringtodoapp.services.CSVToObjectService;
-import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.io.StringWriter;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
@@ -23,6 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ucsb.demonextjsspringtodoapp.models.Todo;
 import com.ucsb.demonextjsspringtodoapp.repositories.TodoRepository;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 public class TodoController {
@@ -104,10 +103,10 @@ public class TodoController {
       return ResponseEntity.ok().body(body);
     } catch(IOException e){
       logger.error(e.toString());
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error processing CSV", e);
     } catch(RuntimeException e){
-      error = "CSV could not be parsed " + e.getLocalizedMessage();
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Malformed CSV", e);
     }
-    return ResponseEntity.badRequest().body(error);
   }
 
 

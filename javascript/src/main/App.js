@@ -11,6 +11,8 @@ import Home from "main/pages/Home/Home";
 import Profile from "main/pages/Profile/Profile";
 import PrivateRoute from "main/components/Auth/PrivateRoute";
 import TodoList from "main/pages/Todos/Todos";
+import 'react-toastify/dist/ReactToastify.css';
+import {ToastContainer} from "react-toastify";
 
 function App() {
   const { isLoading } = useAuth0();
@@ -21,16 +23,25 @@ function App() {
 
   return (
     <div className="App">
-      <AppNavbar />
-      <Container className="flex-grow-1 mt-5">
-        <Switch>
-          <Route path="/" exact component={Home} />
-          <PrivateRoute path="/todos" component={TodoList} />
-          <PrivateRoute path="/profile" component={Profile} />
-          <Route path="/about" component={About} />
-        </Switch>
-      </Container>
-      <AppFooter />
+        <ToastContainer
+            position="top-right"
+            autoClose={5000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            pauseOnHover/>
+        <AppNavbar />
+            <Container className="flex-grow-1 mt-5">
+                <Switch>
+                  <Route path="/" exact component={Home} />
+                  <PrivateRoute path="/todos" component={TodoList} />
+                  <PrivateRoute path="/profile" component={Profile} />
+                  <Route path="/about" component={About} />
+                </Switch>
+            </Container>
+        <AppFooter />
     </div>
   );
 }

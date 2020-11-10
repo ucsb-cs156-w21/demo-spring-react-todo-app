@@ -12,6 +12,18 @@ describe("TodoUpload test", () => {
     const user = {
         name: "test user",
     };
+    const todos = [
+        {
+            value: "incomplete todo",
+            id: 1,
+            done: false,
+        },
+        {
+            value: "complete todo",
+            id: 2,
+            done: true,
+        },
+    ];
     const getAccessTokenSilentlySpy = jest.fn();
     const mutateSpy = jest.fn();
     beforeEach(() => {
@@ -28,6 +40,5 @@ describe("TodoUpload test", () => {
     test("renders without crashing", () => {
         render(<TodoUploadButton />);
     });
-
 
 });
