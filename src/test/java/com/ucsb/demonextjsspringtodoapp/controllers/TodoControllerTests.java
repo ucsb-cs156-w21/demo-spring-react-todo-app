@@ -229,7 +229,7 @@ public class TodoControllerTests {
               .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken()))
             .andExpect(status().isOk()).andReturn();
 
-//    verify(mockTodoRepository, times(1)).saveAll(expectedTodos);
+    verify(mockTodoRepository, times(1)).saveAll(expectedTodos);
   }
 
 }

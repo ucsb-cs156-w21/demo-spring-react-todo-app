@@ -88,8 +88,7 @@ public class TodoController {
   }
 
   @PostMapping(value = "/api/todos/upload", produces = "application/json")
-  public ResponseEntity<String> uploadCSV(@RequestParam("csv") MultipartFile csv, @RequestHeader("Authorization") String authorization)
-          throws JsonProcessingException {
+  public ResponseEntity<String> uploadCSV(@RequestParam("csv") MultipartFile csv, @RequestHeader("Authorization") String authorization) {
     String error = "";
     DecodedJWT jwt = JWT.decode(authorization.substring(7));
     try(Reader reader = new InputStreamReader(csv.getInputStream())){
