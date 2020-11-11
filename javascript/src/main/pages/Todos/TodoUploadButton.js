@@ -3,23 +3,26 @@ import {Button, Col, Row, Container, Form} from "react-bootstrap";
 import {toast} from "react-toastify";
 export const TodoUploadButton = ({ addTask }) => {
     const [value, setValue] = useState("");
+    const [file, setFile] = React.useState(null);
+    const fileRef = React.useRef();
     return (
         <form
             onSubmit={async (event) => {
                 event.preventDefault();
-                const file = event.currentTarget[0].files[0];
                 try{
                     await addTask(file);
-                    event.currentTarget[0].files[0] = null;
                 } catch(error){
-                    toast.error(error.message, {
-                        position: "top-right",
-                        autoClose: 3000,
-                        closeOnClick: true,
-                        pauseOnHover: true
-                    });
-
+                    if(error.message.split(" ")[0] === "HTTP") {
+                        toast.error(error.message, {
+                            position: "top-right",
+                            autoClose: 3500,
+                            closeOnClick: true,
+                            pauseOnHover: false
+                        });
+                    }
                 }
+                fileRef.current.value = "";
+                setFile(null);
                 setValue("");
             }}
         >
@@ -32,7 +35,10 @@ export const TodoUploadButton = ({ addTask }) => {
                                 accept=".csv"
                                 id="custom-file-input"
                                 label="Upload a CSV"
-                                custom />
+                                custom
+                                onChange={event => {setFile(event.currentTarget.files[0])}}
+                                ref={fileRef}
+                            />
                         </Form.Group>
                     </Col>
                     <Col xs={1} style={{ padding: 0 }}>

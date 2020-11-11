@@ -61,7 +61,7 @@ public class TodoControllerTests {
   @Test
   public void testGetTodos() throws Exception {
     List<Todo> expectedTodos = new ArrayList<Todo>();
-    expectedTodos.add(new Todo(1L, "todo 1", false, "123456"));
+    expectedTodos.add(new Todo(1L, "todo", false, "123456"));
 
     when(mockTodoRepository.findByUserId("123456")).thenReturn(expectedTodos);
     MvcResult response =
@@ -213,23 +213,4 @@ public class TodoControllerTests {
     verify(mockTodoRepository, times(1)).findById(expectedTodo.getId());
     verify(mockTodoRepository, times(0)).deleteById(expectedTodo.getId());
   }
-
-  @Test
-  public void testUploadFile() throws Exception{
-    List<Todo> expectedTodos = new ArrayList<Todo>();
-    expectedTodos.add(new Todo(1L, "todo", false, "123456"));
-    MockMultipartFile mockFile = new MockMultipartFile(
-            "csv",
-            "test.csv",
-            MediaType.TEXT_PLAIN_VALUE,
-            "value,done\ntodo,false".getBytes()
-    );
-    MockMvc mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
-    MvcResult response = mockMvc.perform(multipart("/api/todos/upload").file(mockFile)
-              .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken()))
-            .andExpect(status().isOk()).andReturn();
-
-    verify(mockTodoRepository, times(1)).saveAll(expectedTodos);
-  }
-
 }

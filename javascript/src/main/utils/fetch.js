@@ -11,7 +11,7 @@ export async function fetchWithToken(url, getToken, options) {
   });
   if (response.status >= 400 && response.status < 600) {
     const json = await response.json();
-    throw new Error(json.message);
+    throw new Error("HTTP Error " + json.status + ": " + json.message);
   }
   if (options?.noJSON) {
     return response;
