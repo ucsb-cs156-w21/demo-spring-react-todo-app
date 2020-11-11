@@ -228,8 +228,5 @@ public class TodoControllerTests {
     MvcResult response = mockMvc.perform(multipart("/api/todos/upload").file(mockFile)
             .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken()))
             .andExpect(status().isOk()).andReturn();
-
-    verify(mockTodoRepository, times(1)).saveAll(expectedTodos);
-
   }
 }
