@@ -61,7 +61,7 @@ public class TodoControllerTests {
   @Test
   public void testGetTodos() throws Exception {
     List<Todo> expectedTodos = new ArrayList<Todo>();
-    expectedTodos.add(new Todo(1L, "todo", false, "123456"));
+    expectedTodos.add(new Todo(1L, "todo 1", false, "123456"));
 
     when(mockTodoRepository.findByUserId("123456")).thenReturn(expectedTodos);
     MvcResult response =

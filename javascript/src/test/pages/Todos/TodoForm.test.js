@@ -12,7 +12,7 @@ describe("TodoForm tests", () => {
     const addTask = jest.fn();
     render(<TodoForm addTask={addTask} />);
     const input = screen.getByPlaceholderText("add todo");
-    const submit = screen.getByText("Submit");
+    const submit = screen.getByTestId("todo-submit");
     userEvent.type(input, "new todo");
     userEvent.click(submit);
     expect(addTask).toHaveBeenCalledTimes(1);

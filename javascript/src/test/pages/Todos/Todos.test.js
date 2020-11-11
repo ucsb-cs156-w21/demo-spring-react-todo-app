@@ -1,5 +1,5 @@
 import React from "react";
-import { waitFor, render } from "@testing-library/react";
+import { waitFor, render, screen} from "@testing-library/react";
 import useSWR from "swr";
 jest.mock("swr");
 import { useAuth0 } from "@auth0/auth0-react";
@@ -66,7 +66,7 @@ describe("TodoList test", () => {
   test("can't submit blank todo", () => {
     const { getByPlaceholderText, getByText } = render(<TodoList />);
     const input = getByPlaceholderText("add todo");
-    const submit = getByText("Submit");
+    const submit = screen.getByTestId("todo-submit");
     userEvent.type(input, "");
     userEvent.click(submit);
     expect(mutateSpy).toHaveBeenCalledTimes(0);
@@ -81,7 +81,7 @@ describe("TodoList test", () => {
 
     const { getByPlaceholderText, getByText } = render(<TodoList />);
     const input = getByPlaceholderText("add todo");
-    const submit = getByText("Submit");
+    const submit = screen.getByTestId("todo-submit");
     userEvent.type(input, "new todo");
     userEvent.click(submit);
     await waitFor(() => expect(fetchWithToken).toHaveBeenCalledTimes(1));

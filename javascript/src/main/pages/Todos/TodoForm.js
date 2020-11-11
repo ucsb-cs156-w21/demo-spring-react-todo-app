@@ -26,7 +26,7 @@ export const TodoForm = ({ addTask }) => {
             />
           </Col>
           <Col xs={1} style={{ padding: 0 }}>
-            <Button type="submit">Submit</Button>
+            <Button data-testid="todo-submit" type="submit">Submit</Button>
           </Col>
         </Row>
       </Container>
