@@ -9,7 +9,7 @@ import javax.persistence.Id;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 
 @Entity
-public class AppUser {
+public class Admin {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private long id;
@@ -17,34 +17,18 @@ public class AppUser {
   @Column(nullable = false)
   private String email;
   @Column(nullable = false)
-  private String firstName;
-  @Column(nullable = false)
-  private String lastName;
+  private boolean isPermanentAdmin = false;
 
-  public AppUser() {
+  public Admin() {
   }
 
-  public AppUser(Long id, String email, String firstName, String lastName) {
-    this.id = id;
+  public Admin(String email) {
     this.email = email;
-    this.firstName = firstName;
-    this.lastName = lastName;
   }
 
-  public String getFirstName() {
-    return this.firstName;
-  }
-
-  public void setFirstName(String firstName) {
-    this.firstName = firstName;
-  }
-
-  public String getLastName() {
-    return this.lastName;
-  }
-
-  public void setLastName(String lastName) {
-    this.lastName = lastName;
+  public Admin(String email, boolean status) {
+    this.email = email;
+    this.isPermanentAdmin = status;
   }
 
   public void setId(long id) {
@@ -63,10 +47,18 @@ public class AppUser {
     return email;
   }
 
+  public boolean getIsPermanentAdmin() {
+    return isPermanentAdmin;
+  }
+
+  public void setIsPermanentAdmin(boolean status) {
+    isPermanentAdmin = status;
+  }
+
   @Override
   public String toString() {
-    return String.format("AppUser[ id=%d, email=%s, firstName=%s, lastName=%s ]", id, email,
-        firstName, lastName);
+    return String.format("Admin[ id=%d, email=%s, isPermanentAdmin=%s ]", this.id, this.email,
+        this.isPermanentAdmin);
   }
 
   @Override
@@ -75,10 +67,11 @@ public class AppUser {
       return true;
     if (o == null || getClass() != o.getClass())
       return false;
-    AppUser user = (AppUser) o;
+    Admin admin = (Admin) o;
     EqualsBuilder builder = new EqualsBuilder();
-    builder.append(id, user.getId()).append(email, user.getEmail()).append(firstName, user.getFirstName()).append(lastName, user.getLastName());
-
-    return builder.isEquals();
+    builder.append(id, admin.getId()).append(email, admin.getEmail()).append(isPermanentAdmin,
+        admin.getIsPermanentAdmin());
+    return builder.build();
   }
+
 }

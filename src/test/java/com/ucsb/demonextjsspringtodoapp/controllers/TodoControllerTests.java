@@ -14,6 +14,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -28,7 +29,9 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ucsb.demonextjsspringtodoapp.models.Todo;
+import com.ucsb.demonextjsspringtodoapp.advice.AuthControllerAdvice;
+import com.ucsb.demonextjsspringtodoapp.entities.AppUser;
+import com.ucsb.demonextjsspringtodoapp.entities.Todo;
 import com.ucsb.demonextjsspringtodoapp.repositories.TodoRepository;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -54,23 +57,29 @@ public class TodoControllerTests {
   @MockBean
   TodoRepository mockTodoRepository;
 
+  @MockBean
+  AuthControllerAdvice mockAuthControllerAdvice;
+
   private String userToken() {
     return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTYiLCJuYW1lIjoiSm9obiBEb2UiLCJpYXQiOjE1MTYyMzkwMjJ9.MkiS50WhvOFwrwxQzd5Kp3VzkQUZhvex3kQv-CLeS3M";
   }
 
+  AppUser mockUser = new AppUser(1L, "test@ucsb.edu", "Test", "User");
+
   @Test
   public void testGetTodos() throws Exception {
     List<Todo> expectedTodos = new ArrayList<Todo>();
-    expectedTodos.add(new Todo(1L, "todo 1", false, "123456"));
+    expectedTodos.add(new Todo(1L, "todo 1", false, mockUser.getEmail()));
 
-    when(mockTodoRepository.findByUserId("123456")).thenReturn(expectedTodos);
+    when(mockTodoRepository.findByUserId("test@ucsb.edu")).thenReturn(expectedTodos);
+    when(mockAuthControllerAdvice.getUser(anyString())).thenReturn(mockUser);
     MvcResult response =
         mockMvc
             .perform(get("/api/todos").contentType("application/json")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken()))
             .andExpect(status().isOk()).andReturn();
 
-    verify(mockTodoRepository, times(1)).findByUserId("123456");
+    verify(mockTodoRepository, times(1)).findByUserId(mockUser.getEmail());
 
     String responseString = response.getResponse().getContentAsString();
     List<Todo> actualTodos =
@@ -81,9 +90,11 @@ public class TodoControllerTests {
 
   @Test
   public void testSaveTodo() throws Exception {
-    Todo expectedTodo = new Todo(1L, "todo 1", false, "123456");
+    Todo expectedTodo = new Todo(1L, "todo 1", false, mockUser.getEmail());
     ObjectMapper mapper = new ObjectMapper();
     String requestBody = mapper.writeValueAsString(expectedTodo);
+    when(mockAuthControllerAdvice.getUser(anyString())).thenReturn(mockUser);
+
     when(mockTodoRepository.save(any())).thenReturn(expectedTodo);
     MvcResult response = mockMvc
         .perform(post("/api/todos").with(csrf()).contentType(MediaType.APPLICATION_JSON)
@@ -100,11 +111,12 @@ public class TodoControllerTests {
 
   @Test
   public void testUpdateTodo_todoExists_updateValues() throws Exception {
-    Todo inputTodo = new Todo(1L, "new todo 1", false, "123456");
-    Todo savedTodo = new Todo(1L, "old todo 1", true, "123456");
+    Todo inputTodo = new Todo(1L, "new todo 1", false, mockUser.getEmail());
+    Todo savedTodo = new Todo(1L, "old todo 1", true, mockUser.getEmail());
     String body = objectMapper.writeValueAsString(inputTodo);
-
+    when(mockAuthControllerAdvice.getUser(anyString())).thenReturn(mockUser);
     when(mockTodoRepository.findById(any(Long.class))).thenReturn(Optional.of(savedTodo));
+
     when(mockTodoRepository.save(inputTodo)).thenReturn(inputTodo);
     MvcResult response =
         mockMvc
@@ -123,8 +135,9 @@ public class TodoControllerTests {
 
   @Test
   public void testUpdateTodo_todoNotFound() throws Exception {
-    Todo inputTodo = new Todo(1L, "new todo 1", false, "123456");
+    Todo inputTodo = new Todo(1L, "new todo 1", false, mockUser.getEmail());
     String body = objectMapper.writeValueAsString(inputTodo);
+    when(mockAuthControllerAdvice.getUser(anyString())).thenReturn(mockUser);
 
     when(mockTodoRepository.findById(1L)).thenReturn(Optional.empty());
     mockMvc.perform(put("/api/todos/1").with(csrf()).contentType(MediaType.APPLICATION_JSON)
@@ -136,9 +149,11 @@ public class TodoControllerTests {
 
   @Test
   public void testUpdateTodo_todoAtPathOwned_butTryingToOverwriteAnotherTodo() throws Exception {
-    Todo inputTodo = new Todo(1L, "new todo 1 trying to overwrite at id 1", false, "123456");
-    Todo savedTodo = new Todo(2L, "new todo 1", false, "123456");
+    Todo inputTodo =
+        new Todo(1L, "new todo 1 trying to overwrite at id 1", false, mockUser.getEmail());
+    Todo savedTodo = new Todo(2L, "new todo 1", false, mockUser.getEmail());
     String body = objectMapper.writeValueAsString(inputTodo);
+    when(mockAuthControllerAdvice.getUser(anyString())).thenReturn(mockUser);
     when(mockTodoRepository.findById(any(Long.class))).thenReturn(Optional.of(savedTodo));
     mockMvc.perform(put("/api/todos/2").with(csrf()).contentType(MediaType.APPLICATION_JSON)
         .characterEncoding("utf-8").header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken())
@@ -150,8 +165,10 @@ public class TodoControllerTests {
   @Test
   public void testUpdateTodo_todoAtPathOwned_butTryingToInjectTodoForAnotherUser()
       throws Exception {
-    Todo inputTodo = new Todo(1L, "new todo 1 trying to inject to user id 654321", false, "654321");
-    Todo savedTodo = new Todo(1L, "new todo 1", false, "123456");
+    Todo inputTodo = new Todo(1L, "new todo 1 trying to inject to user id 654321", false,
+        "someoneelse@ucsb.edu");
+    Todo savedTodo = new Todo(1L, "new todo 1", false, mockUser.getEmail());
+    when(mockAuthControllerAdvice.getUser(anyString())).thenReturn(mockUser);
     String body = objectMapper.writeValueAsString(inputTodo);
     when(mockTodoRepository.findById(any(Long.class))).thenReturn(Optional.of(savedTodo));
     mockMvc.perform(put("/api/todos/1").with(csrf()).contentType(MediaType.APPLICATION_JSON)
@@ -163,9 +180,11 @@ public class TodoControllerTests {
 
   @Test
   public void testUpdateTodo_todoAtPathNotOwned() throws Exception {
-    Todo inputTodo = new Todo(1L, "new todo 1", false, "123456");
+    Todo inputTodo = new Todo(1L, "new todo 1", false, mockUser.getEmail());
     Todo savedTodo = new Todo(2L, "new todo 1", false, "NOT YOURS");
     String body = objectMapper.writeValueAsString(inputTodo);
+    when(mockAuthControllerAdvice.getUser(anyString())).thenReturn(mockUser);
+
     when(mockTodoRepository.findById(any(Long.class))).thenReturn(Optional.of(savedTodo));
     mockMvc.perform(put("/api/todos/1").with(csrf()).contentType(MediaType.APPLICATION_JSON)
         .characterEncoding("utf-8").header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken())
@@ -176,8 +195,9 @@ public class TodoControllerTests {
 
   @Test
   public void testDeleteTodo_todoExists() throws Exception {
-    Todo expectedTodo = new Todo(1L, "todo 1", false, "123456");
+    Todo expectedTodo = new Todo(1L, "todo 1", false, mockUser.getEmail());
     when(mockTodoRepository.findById(1L)).thenReturn(Optional.of(expectedTodo));
+    when(mockAuthControllerAdvice.getUser(anyString())).thenReturn(mockUser);
     MvcResult response = mockMvc
         .perform(delete("/api/todos/1").with(csrf()).contentType(MediaType.APPLICATION_JSON)
             .characterEncoding("utf-8").header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken()))
@@ -194,6 +214,7 @@ public class TodoControllerTests {
   public void testDeleteTodo_todoNotFound() throws Exception {
     long id = 1L;
     when(mockTodoRepository.findById(id)).thenReturn(Optional.empty());
+    when(mockAuthControllerAdvice.getUser(anyString())).thenReturn(mockUser);
     mockMvc
         .perform(delete("/api/todos/1").with(csrf()).contentType(MediaType.APPLICATION_JSON)
             .characterEncoding("utf-8").header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken()))
@@ -204,7 +225,8 @@ public class TodoControllerTests {
 
   @Test
   public void testDeleteTodo_todoNotOwned() throws Exception {
-    Todo expectedTodo = new Todo(1L, "todo 1", true, "NOT YOURS");
+    Todo expectedTodo = new Todo(1L, "todo 1", true, "someoneelse@ucsb.edu");
+    when(mockAuthControllerAdvice.getUser(anyString())).thenReturn(mockUser);
     when(mockTodoRepository.findById(expectedTodo.getId())).thenReturn(Optional.of(expectedTodo));
     mockMvc
         .perform(delete("/api/todos/1").with(csrf()).contentType(MediaType.APPLICATION_JSON)

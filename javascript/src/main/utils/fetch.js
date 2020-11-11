@@ -13,7 +13,7 @@ export async function fetchWithToken(url, getToken, options) {
     const json = await response.json();
     throw new Error("HTTP Error " + json.status + ": " + json.message);
   }
-  if (options?.noJSON) {
+  if (options?.noJSON || response.status === 204) {
     return response;
   }
   return response.json();

@@ -13,9 +13,17 @@ import PrivateRoute from "main/components/Auth/PrivateRoute";
 import TodoList from "main/pages/Todos/Todos";
 import 'react-toastify/dist/ReactToastify.css';
 import {ToastContainer} from "react-toastify";
+import Admin from "main/pages/Admin/Admin";
+import useSWR from "swr";
+import { fetchWithToken } from "main/utils/fetch";
 
 function App() {
-  const { isLoading } = useAuth0();
+  const { isLoading, getAccessTokenSilently: getToken } = useAuth0();
+  const { data: roleInfo } = useSWR(
+    ["/api/myRole", getToken],
+    fetchWithToken
+  );
+  const isAdmin = roleInfo && roleInfo.role.toLowerCase() === "admin";
 
   if (isLoading) {
     return <Loading />;
@@ -32,16 +40,19 @@ function App() {
             rtl={false}
             pauseOnFocusLoss
             pauseOnHover/>
-        <AppNavbar />
-            <Container className="flex-grow-1 mt-5">
-                <Switch>
-                  <Route path="/" exact component={Home} />
-                  <PrivateRoute path="/todos" component={TodoList} />
-                  <PrivateRoute path="/profile" component={Profile} />
-                  <Route path="/about" component={About} />
-                </Switch>
-            </Container>
-        <AppFooter />
+      <AppNavbar />
+      <Container className="flex-grow-1 mt-5">
+        <Switch>
+          <Route path="/" exact component={Home} />
+          <PrivateRoute path="/todos" component={TodoList} />
+          <PrivateRoute path="/profile" component={Profile} />
+          { isAdmin &&
+            <PrivateRoute path="/admin" component={Admin} />
+          }
+          <Route path="/about" component={About} />
+        </Switch>
+      </Container>
+      <AppFooter />
     </div>
   );
 }

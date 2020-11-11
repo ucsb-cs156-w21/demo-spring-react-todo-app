@@ -1,5 +1,6 @@
 package com.ucsb.demonextjsspringtodoapp.controllers;
 
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.ucsb.demonextjsspringtodoapp.services.CSVToObjectService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,11 +15,11 @@ import java.io.Reader;
 import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ucsb.demonextjsspringtodoapp.models.Todo;
+import com.ucsb.demonextjsspringtodoapp.advice.AuthControllerAdvice;
+import com.ucsb.demonextjsspringtodoapp.entities.AppUser;
+import com.ucsb.demonextjsspringtodoapp.entities.Todo;
 import com.ucsb.demonextjsspringtodoapp.repositories.TodoRepository;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
@@ -33,13 +34,16 @@ public class TodoController {
   @Autowired
   CSVToObjectService<Todo> csvToObjectService;
 
+  @Autowired
+  private AuthControllerAdvice authControllerAdvice;
+
   private ObjectMapper mapper = new ObjectMapper();
 
   @PostMapping(value = "/api/todos", produces = "application/json")
   public ResponseEntity<String> createTodo(@RequestHeader("Authorization") String authorization,
       @RequestBody @Valid Todo todo) throws JsonProcessingException {
-    DecodedJWT jwt = JWT.decode(authorization.substring(7));
-    todo.setUserId(jwt.getSubject());
+    AppUser user = authControllerAdvice.getUser(authorization);
+    todo.setUserId(user.getEmail());
     Todo savedTodo = todoRepository.save(todo);
     String body = mapper.writeValueAsString(savedTodo);
     return ResponseEntity.ok().body(body);
@@ -49,13 +53,14 @@ public class TodoController {
   public ResponseEntity<String> updateTodo(@RequestHeader("Authorization") String authorization,
       @PathVariable("id") Long id, @RequestBody @Valid Todo incomingTodo)
       throws JsonProcessingException {
-    DecodedJWT jwt = JWT.decode(authorization.substring(7));
+    AppUser user = authControllerAdvice.getUser(authorization);
+
     Optional<Todo> todo = todoRepository.findById(id);
-    if (!todo.isPresent() || !todo.get().getUserId().equals(jwt.getSubject())) {
+    if (!todo.isPresent() || !todo.get().getUserId().equals(user.getEmail())) {
       return ResponseEntity.notFound().build();
     }
 
-    if (!incomingTodo.getId().equals(id) || !incomingTodo.getUserId().equals(jwt.getSubject())) {
+    if (!incomingTodo.getId().equals(id) || !incomingTodo.getUserId().equals(user.getEmail())) {
       return ResponseEntity.badRequest().build();
     }
 
@@ -67,9 +72,10 @@ public class TodoController {
   @DeleteMapping(value = "/api/todos/{id}", produces = "application/json")
   public ResponseEntity<String> deleteTodo(@RequestHeader("Authorization") String authorization,
       @PathVariable("id") Long id) {
-    DecodedJWT jwt = JWT.decode(authorization.substring(7));
+    AppUser user = authControllerAdvice.getUser(authorization);
+
     Optional<Todo> todo = todoRepository.findById(id);
-    if (!todo.isPresent() || !todo.get().getUserId().equals(jwt.getSubject())) {
+    if (!todo.isPresent() || !todo.get().getUserId().equals(user.getEmail())) {
       return ResponseEntity.notFound().build();
     }
     todoRepository.deleteById(id);
@@ -79,8 +85,8 @@ public class TodoController {
   @GetMapping(value = "/api/todos", produces = "application/json")
   public ResponseEntity<String> getUserTodos(@RequestHeader("Authorization") String authorization)
       throws JsonProcessingException {
-    DecodedJWT jwt = JWT.decode(authorization.substring(7));
-    List<Todo> todoList = todoRepository.findByUserId(jwt.getSubject());
+    AppUser user = authControllerAdvice.getUser(authorization);
+    List<Todo> todoList = todoRepository.findByUserId(user.getEmail());
     ObjectMapper mapper = new ObjectMapper();
 
     String body = mapper.writeValueAsString(todoList);
@@ -90,12 +96,12 @@ public class TodoController {
   @PostMapping(value = "/api/todos/upload", produces = "application/json")
   public ResponseEntity<String> uploadCSV(@RequestParam("csv") MultipartFile csv, @RequestHeader("Authorization") String authorization) {
     String error = "";
-    DecodedJWT jwt = JWT.decode(authorization.substring(7));
+    AppUser user = authControllerAdvice.getUser(authorization);
     try(Reader reader = new InputStreamReader(csv.getInputStream())){
       logger.info(new String(csv.getInputStream().readAllBytes()));
       List<Todo> todos = csvToObjectService.parse(reader, Todo.class);
       for (Todo todo : todos) {
-        todo.setUserId(jwt.getSubject());
+        todo.setUserId(user.getEmail());
       }
       List<Todo> savedTodos = (List<Todo>) todoRepository.saveAll(todos);
       String body = mapper.writeValueAsString(savedTodos);
